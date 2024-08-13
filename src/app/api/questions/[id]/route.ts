@@ -6,6 +6,18 @@ const connectToDatabase = async () => {
   if (mongoose.connection.readyState === 1) return;
   await mongoose.connect(process.env.MONGODB_URI!);
 };
+export async function GET(request: Request, { params }: { params: { id: string } }) {
+  try {
+    const { id } = params;
+    await connectToDatabase();
+    const questions = await QuizQuestion.findById(id);
+
+    return NextResponse.json(questions);
+  } catch (error) {
+    return NextResponse.json({ error: 'Failed to fetch quiz questions' }, { status: 500 });
+  }
+}
+
 
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   try {
