@@ -1,5 +1,5 @@
 "use client"
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Header from './Header';
 import QuestionSection from './QuestionSection';
 import OptionButton from './OptionButton';
@@ -11,7 +11,9 @@ const QuizContainer = () => {
   const [score, setScore] = useState<number>(0);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [quizCompleted, setQuizCompleted] = useState<boolean>(false);
-  
+  const [timeRemaining, setTimeRemaining] = useState<number>(60000); 
+  const [timerActive, setTimerActive] = useState<boolean>(true);
+
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
@@ -25,8 +27,9 @@ const QuizContainer = () => {
     fetchQuestions();
   }, []);
 
-
   const handleOptionClick = (option: string) => {
+    if (!timerActive) return;
+
     const currentQuestion = questions[currentIndex];
     if (option === currentQuestion.answer) {
       setScore(score + 1);
@@ -41,9 +44,32 @@ const QuizContainer = () => {
         setFeedback(null);
       } else {
         setQuizCompleted(true);
+        setTimerActive(false);
       }
-    }, 600); 
+    }, 600);
   };
+
+  useEffect(() => {
+    if (timeRemaining <= 0) {
+      setQuizCompleted(true);
+      setTimerActive(false);
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setTimeRemaining(prevTime => prevTime - 1000);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [timeRemaining, timerActive]);
+
+
+const formatTime = (time: number) => {
+  const minutes = Math.floor(time / 60000);
+  const seconds = Math.floor((time % 60000) / 1000); 
+  return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+};
+
 
   const currentQuestion = questions[currentIndex];
 
@@ -58,6 +84,7 @@ const QuizContainer = () => {
       ) : (
         <>
           <div className={styles.scoreSection}>
+            <p>Time Remaining: {formatTime(timeRemaining)}</p>
             <p>Score: {score}</p>
           </div>
           {currentQuestion ? (
