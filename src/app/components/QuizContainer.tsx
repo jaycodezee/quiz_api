@@ -42,7 +42,7 @@ const QuizContainer = () => {
       } else {
         setQuizCompleted(true);
       }
-    }, 200); 
+    }, 600); 
   };
 
   const currentQuestion = questions[currentIndex];
